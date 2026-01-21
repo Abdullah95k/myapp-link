@@ -1,20 +1,25 @@
 export async function onRequest({ request }) {
-  const APP_STORE_URL = "https://apps.apple.com/us/app/travel-tale-ترافل-تيل/id6743813106";
-  const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.mycompany.traveltale";
+  try {
+    const ua = request.headers.get("user-agent") || "";
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isAndroid = /Android/i.test(ua);
 
-  const ua = (request.headers.get("user-agent") || "").toLowerCase();
+    // ✅ put your real links here
+    const IOS_STORE = "https://apps.apple.com/app/id6743813106";
+    const ANDROID_STORE =
+      "https://play.google.com/store/apps/details?id=YOUR.ANDROID.PACKAGE";
 
-  const isIOS =
-    ua.includes("iphone") ||
-    ua.includes("ipad") ||
-    ua.includes("ipod") ||
-    (ua.includes("macintosh") && ua.includes("mobile")); // iPadOS case
+    const target = isIOS ? IOS_STORE : isAndroid ? ANDROID_STORE : "/";
 
-  const isAndroid = ua.includes("android");
-
-  if (isIOS) return Response.redirect(APP_STORE_URL, 302);
-  if (isAndroid) return Response.redirect(PLAY_STORE_URL, 302);
-
-  // Desktop/unknown -> show branded landing page
-  return Response.redirect("/", 302);
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: target,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (e) {
+    // fail open
+    return new Response(null, { status: 302, headers: { Location: "/" } });
+  }
 }
