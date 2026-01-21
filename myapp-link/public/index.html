@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#C37DFF" />
+    <title>حمّل التطبيق</title>
+
+    <!-- Optional: Arabic font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+      :root{
+        --bg-1:#C37DFF;   /* main lavender */
+        --bg-2:#B973FF;   /* secondary lavender */
+        --deep:#2B0A52;   /* deep purple text */
+        --deep-2:#3A0E70;
+        --white:#ffffff;
+        --glass: rgba(255,255,255,.14);
+        --glass-2: rgba(255,255,255,.10);
+        --shadow: 0 18px 50px rgba(20, 4, 40, .25);
+        --radius: 22px;
+      }
+
+      *{ box-sizing:border-box; }
+      body{
+        margin:0;
+        font-family: "Cairo", system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+        color: var(--deep);
+        background: radial-gradient(1200px 800px at 15% 20%, rgba(255,255,255,.18), rgba(255,255,255,0) 55%),
+                    radial-gradient(1000px 600px at 85% 15%, rgba(55,5,105,.14), rgba(55,5,105,0) 60%),
+                    linear-gradient(135deg, var(--bg-1), var(--bg-2));
+        overflow-x:hidden;
+      }
+
+      /* Soft wave layers (similar vibe to your posters) */
+      .bg-waves::before,
+      .bg-waves::after{
+        content:"";
+        position:fixed;
+        inset:auto;
+        left:-20%;
+        right:-20%;
+        height: 46vh;
+        border-radius: 999px;
+        filter: blur(0px);
+        z-index:-1;
+      }
+      .bg-waves::before{
+        top: 20vh;
+        background: rgba(255,255,255,.10);
+        transform: rotate(-8deg);
+      }
+      .bg-waves::after{
+        top: 48vh;
+        background: rgba(255,255,255,.06);
+        transform: rotate(7deg);
+      }
+
+      .wrap{
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 24px 18px 60px;
+      }
+
+      header{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding: 10px 4px 18px;
+      }
+
+      .brand{
+        display:flex;
+        align-items:center;
+        .brand .logo{
+  height: 34px;
+  width: auto;
+  display:block;
+  filter: drop-shadow(0 10px 18px rgba(20,4,40,.18));
+}
+
+        gap:10px;
+        color: var(--deep);
+        font-weight:800;
+        letter-spacing:.2px;
+      }
+      .brand .dot{
+        width:14px;height:14px;border-radius:999px;
+        background: rgba(55,5,105,.95);
+        box-shadow: 0 0 0 6px rgba(255,255,255,.12);
+      }
+
+      .pill{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:10px 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.16);
+        border: 1px solid rgba(255,255,255,.22);
+        backdrop-filter: blur(10px);
+        color: var(--deep);
+        text-decoration:none;
+        font-weight:700;
+      }
+
+      .hero{
+        display:grid;
+        grid-template-columns: 1.1fr .9fr;
+        gap: 22px;
+        align-items:center;
+        margin-top: 10px;
+      }
+
+      .card{
+        background: linear-gradient(180deg, var(--glass), var(--glass-2));
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero-copy{
+        padding: 26px 22px;
+      }
+
+      h1{
+        margin:0 0 10px;
+        font-size: clamp(30px, 3.6vw, 48px);
+        line-height:1.15;
+        font-weight: 900;
+        color: rgba(55,5,105,.95);
+        text-shadow: 0 10px 22px rgba(20, 4, 40, .16);
+      }
+
+      .sub{
+        margin: 0 0 18px;
+        font-size: 18px;
+        line-height: 1.8;
+        color: rgba(55,5,105,.88);
+        font-weight: 600;
+      }
+
+      .cta-row{
+        display:flex;
+        flex-wrap:wrap;
+        gap: 10px;
+        margin-top: 6px;
+      }
+
+      .btn{
+        appearance:none;
+        border:0;
+        cursor:pointer;
+        text-decoration:none;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-weight: 800;
+        letter-spacing: .2px;
+        transition: transform .12s ease, filter .12s ease;
+        user-select:none;
+      }
+      .btn:active{ transform: scale(.98); }
+      .btn-primary{
+        background: rgba(55,5,105,.96);
+        color: #fff;
+        box-shadow: 0 16px 36px rgba(55,5,105,.28);
+      }
+      .btn-ghost{
+        background: rgba(255,255,255,.18);
+        color: rgba(55,5,105,.95);
+        border: 1px solid rgba(255,255,255,.22);
+      }
+
+      .mini{
+        margin-top: 14px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        align-items:center;
+        color: rgba(55,5,105,.86);
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .mini span{
+        background: rgba(255,255,255,.14);
+        border: 1px solid rgba(255,255,255,.20);
+        padding: 8px 10px;
+        border-radius: 999px;
+      }
+
+      .hero-media{
+        padding: 16px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+      }
+      .phone-shot{
+        width:min(380px, 100%);
+        aspect-ratio: 9 / 16;
+        border-radius: 28px;
+        overflow:hidden;
+        box-shadow: 0 26px 70px rgba(20,4,40,.28);
+        border: 1px solid rgba(255,255,255,.24);
+        background: rgba(255,255,255,.10);
+      }
+      .phone-shot img{
+        width:100%;
+        height:100%;
+        object-fit: cover;
+        display:block;
+        transform: scale(1.02);
+      }
+
+      .section{
+        margin-top: 22px;
+        padding: 18px;
+      }
+
+      .section h2{
+        margin: 0 0 10px;
+        font-size: 22px;
+        color: rgba(55,5,105,.95);
+        font-weight: 900;
+      }
+
+      .features{
+        display:grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      .feature{
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.14);
+        border: 1px solid rgba(255,255,255,.20);
+      }
+      .feature .t{
+        font-weight: 900;
+        color: rgba(55,5,105,.95);
+        margin-bottom: 6px;
+      }
+      .feature .d{
+        margin:0;
+        color: rgba(55,5,105,.84);
+        font-weight: 700;
+        line-height: 1.8;
+        font-size: 14px;
+      }
+
+      .carousel{
+        margin-top: 14px;
+        display:grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(220px, 1fr);
+        gap: 12px;
+        overflow:auto;
+        padding-bottom: 8px;
+        scroll-snap-type: x mandatory;
+      }
+      .slide{
+        scroll-snap-align: start;
+        border-radius: 18px;
+        overflow:hidden;
+        border: 1px solid rgba(255,255,255,.22);
+        box-shadow: 0 18px 40px rgba(20,4,40,.18);
+        background: rgba(255,255,255,.10);
+        min-height: 320px;
+      }
+      .slide img{
+        width:100%;
+        height:100%;
+        object-fit: cover;
+        display:block;
+      }
+
+      footer{
+        margin-top: 26px;
+        text-align:center;
+        color: rgba(55,5,105,.82);
+        font-weight: 700;
+        font-size: 13px;
+        padding: 14px 0;
+      }
+
+      @media (max-width: 920px){
+        .hero{ grid-template-columns: 1fr; }
+        .hero-media{ order:-1; }
+        .features{ grid-template-columns: 1fr; }
+        .slide{ min-height: 420px; }
+      }
+
+      @media (prefers-reduced-motion: reduce){
+        .btn{ transition:none; }
+      }
+    </style>
+  </head>
+
+  <body class="bg-waves">
+    <div class="wrap">
+      <header>
+<div class="brand">
+  <img class="logo" src="/assets/logo.png" alt="Travel Tale logo" />
+</div>
+
+
+        <!-- optional: if you want a “share link” hint -->
+        <a class="pill" href="/app">رابط التحميل الذكي</a>
+      </header>
+
+      <main class="hero">
+        <section class="card hero-copy">
+          <h1>حمّل التطبيق واستكشف بغداد بسهولة!</h1>
+          <p class="sub">
+            كل المعالم، الحكايات، والمعلومات اللي تحتاجها… بتجربة عربية واضحة وبهوية لونية بنفس أسلوب حملتك.
+          </p>
+
+          <div class="cta-row">
+            <!-- This uses your smart redirect route -->
+            <a class="btn btn-primary" href="/app">تحميل الآن</a>
+
+            <!-- Optional direct store links (replace URLs) -->
+            <a class="btn btn-ghost" href="https://apps.apple.com/us/app/travel-tale-ترافل-تيل/id6743813106" rel="noopener">App Store</a>
+            <a class="btn btn-ghost" href="https://play.google.com/store/apps/details?id=com.mycompany.traveltale" rel="noopener">Google Play</a>
+          </div>
+
+          <div class="mini" aria-label="Highlights">
+            <span>اكتشف المعالم</span>
+            <span>حكايات صوتية ونصية</span>
+            <span>معلومات تسهّل زيارتك</span>
+          </div>
+        </section>
+
+        <aside class="card hero-media">
+          <div class="phone-shot">
+            <!-- Pick your best “phone” visual here -->
+            <img src="/assets/slide-3.png" alt="App preview" />
+          </div>
+        </aside>
+      </main>
+
+      <section class="card section">
+        <h2>ليش تحمّله؟</h2>
+
+        <div class="features">
+          <div class="feature">
+            <div class="t">اكتشف كل المعالم</div>
+            <p class="d">مكان واحد يجمع أهم مواقع بغداد ويوصلك للمعلومة بسرعة.</p>
+          </div>
+
+          <div class="feature">
+            <div class="t">اسمع أو اقرأ الحكاية</div>
+            <p class="d">قصص ممتعة عن المعالم التاريخية بصيغة صوتية ونصية.</p>
+          </div>
+
+          <div class="feature">
+            <div class="t">معلومات واضحة</div>
+            <p class="d">تفاصيل تساعدك على اتخاذ قرار الزيارة وماذا تتوقع قبل الوصول.</p>
+          </div>
+        </div>
+
+        <div class="carousel" aria-label="Brand visuals">
+          <div class="slide"><img src="/assets/slide-1.png" alt="Brand slide 1"></div>
+          <div class="slide"><img src="/assets/slide-2.png" alt="Brand slide 2"></div>
+          <div class="slide"><img src="/assets/slide-3.png" alt="Brand slide 3"></div>
+          <div class="slide"><img src="/assets/slide-4.png" alt="Brand slide 4"></div>
+        </div>
+      </section>
+
+      <footer>
+        © Travel Tale — Baghdad
+      </footer>
+    </div>
+  </body>
+</html>
