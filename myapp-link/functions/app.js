@@ -7,7 +7,7 @@ export async function onRequest({ request }) {
     // ✅ put your real links here
     const IOS_STORE = "https://apps.apple.com/app/id6743813106";
     const ANDROID_STORE =
-      "https://play.google.com/store/apps/details?id=YOUR.ANDROID.PACKAGE";
+      "https://play.google.com/store/apps/details?id=com.mycompany.traveltale";
 
     const target = isIOS ? IOS_STORE : isAndroid ? ANDROID_STORE : "/";
 
