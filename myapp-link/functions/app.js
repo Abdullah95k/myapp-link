@@ -37,4 +37,4 @@ export async function onRequest(context) {
   if (setCookie) headers.append("Set-Cookie", setCookie);
 
   return new Response(null, { status: 302, headers });
-} 
+}
