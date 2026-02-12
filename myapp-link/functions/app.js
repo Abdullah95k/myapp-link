@@ -1,25 +1,40 @@
-export async function onRequest({ request }) {
-  try {
-    const ua = request.headers.get("user-agent") || "";
-    const isIOS = /iPhone|iPad|iPod/i.test(ua);
-    const isAndroid = /Android/i.test(ua);
+import {
+  buildDeviceCookie,
+  detectDevice,
+  getOrCreateDeviceId,
+  getStoreUrls,
+  logOpenEvent,
+} from "./_shared.js";
 
-    // ✅ put your real links here
-    const IOS_STORE = "https://apps.apple.com/app/id6743813106";
-    const ANDROID_STORE =
-      "https://play.google.com/store/apps/details?id=com.mycompany.traveltale";
+export async function onRequest(context) {
+  const { request, env } = context;
 
-    const target = isIOS ? IOS_STORE : isAndroid ? ANDROID_STORE : "/";
+  const uaRaw = request.headers.get("user-agent") || "";
+  const device = detectDevice(uaRaw);
 
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: target,
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch (e) {
-    // fail open
-    return new Response(null, { status: 302, headers: { Location: "/" } });
-  }
+  const { deviceId, isNew } = getOrCreateDeviceId(request);
+  const setCookie = isNew ? buildDeviceCookie(deviceId) : null;
+
+  const { iosStore, androidStore } = getStoreUrls(env);
+  const target = device.isIOS ? iosStore : device.isAndroid ? androidStore : "/?landing=1";
+
+  // Log (best-effort)
+  logOpenEvent(context, {
+    device_id: deviceId,
+    event_type: "store_redirect",
+    path: "/app",
+    platform: device.platform,
+    device_type: device.deviceType,
+    is_in_app_browser: device.isInAppBrowser,
+    user_agent: uaRaw,
+    referer: request.headers.get("referer"),
+  });
+
+  const headers = new Headers({
+    Location: target,
+    "Cache-Control": "no-store",
+  });
+  if (setCookie) headers.append("Set-Cookie", setCookie);
+
+  return new Response(null, { status: 302, headers });
 }
