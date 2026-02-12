@@ -1,70 +1,108 @@
+import {
+  buildDeviceCookie,
+  detectDevice,
+  getOrCreateDeviceId,
+  getStoreUrls,
+  logOpenEvent,
+} from "../_shared.js";
+
 export async function onRequest(context) {
-  const { params, request } = context;
-  const id = params.id;
+  const { params, request, env } = context;
+  const idRaw = params.id;
+  const attractionId = Number.parseInt(idRaw, 10);
 
-  // ✅ Your deep link
-  const deepLink = `traveltale://traveltale.app/attraction/${id}`;
+  const uaRaw = request.headers.get("user-agent") || "";
+  const device = detectDevice(uaRaw);
 
-  // TODO: put your real store URLs here
-  const iosStore = "https://apps.apple.com/dz/app/travel-tale-ترافل-تيل/id6743813106";
-  const androidStore = "https://play.google.com/store/apps/details?id=com.mycompany.traveltale";
+  const { deviceId, isNew } = getOrCreateDeviceId(request);
+  const setCookie = isNew ? buildDeviceCookie(deviceId) : null;
 
-  const ua = request.headers.get("user-agent") || "";
-  const isIOS = /iPhone|iPad|iPod/i.test(ua);
-  const isAndroid = /Android/i.test(ua);
+  // Your deep link scheme
+  const deepLink = `traveltale://traveltale.app/attraction/${idRaw}`;
 
-  const storeUrl = isIOS ? iosStore : isAndroid ? androidStore : "https://download.traveltale.app/";
+  const { iosStore, androidStore } = getStoreUrls(env);
+  const storeUrl = device.isIOS ? iosStore : device.isAndroid ? androidStore : "https://download.traveltale.app/?landing=1";
+
+  // Log open attempt (server-side)
+  logOpenEvent(context, {
+    device_id: deviceId,
+    event_type: "deep_link_page_open",
+    path: `/a/${idRaw}`,
+    attraction_id: Number.isFinite(attractionId) ? attractionId : null,
+    platform: device.platform,
+    device_type: device.deviceType,
+    is_in_app_browser: device.isInAppBrowser,
+    user_agent: uaRaw,
+    referer: request.headers.get("referer"),
+  });
+
+  // Important behavior:
+  // - If app is installed -> opening deepLink should launch it.
+  // - If not installed -> user should be able to go to store easily.
+  // Auto-redirect to store is helpful, but can be annoying if user cancels the prompt.
+  // So we only auto-redirect when NOT in an in-app browser (IG/TikTok/etc), because in-app browsers often block deep linking.
+  const shouldAutoStoreRedirect = device.isMobile && !device.isInAppBrowser;
 
   const html = `<!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#C37DFF" />
   <title>Open Travel Tale</title>
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;padding:24px;background:#f6f6f8}
-    .card{max-width:520px;margin:0 auto;background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
-    .btn{display:block;text-align:center;margin:10px 0;padding:14px 14px;border-radius:12px;text-decoration:none;font-weight:700}
-    .primary{background:#6f4cff;color:#fff}
-    .secondary{background:#eee;color:#111}
-    .note{font-size:13px;color:#555;line-height:1.4}
+    :root{--accent:#C37DFF;--accent2:#7A35FF;--text:#111827;--muted:#6b7280;--border:#eef0f4;}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;padding:20px;background:radial-gradient(1200px 600px at 50% -20%, rgba(195,125,255,.22), transparent 60%), #fff;color:var(--text)}
+    .card{max-width:520px;margin:0 auto;background:#fff;border-radius:18px;padding:18px;border:1px solid var(--border);box-shadow:0 10px 28px rgba(17,24,39,.08)}
+    h2{margin:0 0 8px;font-size:20px}
+    .note{font-size:13px;color:var(--muted);line-height:1.45;margin:0 0 12px}
+    .btn{display:block;text-align:center;margin:10px 0;padding:14px 14px;border-radius:14px;text-decoration:none;font-weight:800;border:1px solid transparent}
+    .primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+    .secondary{background:#fff;color:var(--text);border-color:var(--border)}
+    .pill{display:inline-block;font-size:12px;padding:7px 10px;border-radius:999px;background:rgba(195,125,255,.14);border:1px solid rgba(195,125,255,.30);color:#4b1e8f;margin-bottom:10px}
   </style>
 </head>
 <body>
   <div class="card">
-    <h2 style="margin:0 0 8px">Opening Travel Tale…</h2>
-    <p class="note">If nothing happens, tap “Open in app”. If you’re in Instagram/TikTok, use “Open in Browser”.</p>
+    <div class="pill">Attraction ID: ${idRaw}</div>
+    <h2>Opening Travel Tale…</h2>
+    <p class="note">
+      If nothing happens, tap <b>Open in app</b>.
+      ${device.isInAppBrowser ? 'If you are inside Instagram/TikTok, use “Open in Browser”.' : ''}
+    </p>
 
-    <a class="btn primary" href="${deepLink}">Open in app</a>
-    <a class="btn secondary" href="${storeUrl}">Download the app</a>
+    <a class="btn primary" id="openBtn" href="${deepLink}">Open in app</a>
+    <a class="btn secondary" id="downloadBtn" href="${storeUrl}">Download the app</a>
 
     <p class="note" style="margin-top:12px">
-      Fallback link: <a href="${storeUrl}">${storeUrl}</a>
+      If you’re on desktop: <a href="https://download.traveltale.app/?landing=1">open landing page</a>
     </p>
   </div>
 
   <script>
-    // Attempt to open app
     const deepLink = ${JSON.stringify(deepLink)};
     const storeUrl = ${JSON.stringify(storeUrl)};
+    const shouldAutoStoreRedirect = ${JSON.stringify(shouldAutoStoreRedirect)};
 
-    // Try opening app immediately
+    // Try opening app quickly
     window.location.href = deepLink;
 
-    // If app didn't open, go to store after a short delay.
-    // (If app opens, page typically becomes hidden and redirect won't matter.)
-    setTimeout(() => {
-      if (!document.hidden) window.location.href = storeUrl;
-    }, 1300);
-
-    document.addEventListener("visibilitychange", () => {
-      // If user left the page (app opened), do nothing.
-    });
+    // Only auto-redirect to store in normal browsers (not IG/TikTok webview)
+    if (shouldAutoStoreRedirect) {
+      setTimeout(() => {
+        if (!document.hidden) window.location.href = storeUrl;
+      }, 1600);
+    }
   </script>
 </body>
 </html>`;
 
-  return new Response(html, {
-    headers: { "content-type": "text/html; charset=UTF-8" },
+  const headers = new Headers({
+    "content-type": "text/html; charset=UTF-8",
+    "cache-control": "no-store",
   });
+  if (setCookie) headers.append("Set-Cookie", setCookie);
+
+  return new Response(html, { headers });
 }
