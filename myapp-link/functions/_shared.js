@@ -58,7 +58,8 @@ export function getOrCreateDeviceId(request) {
   const existing = getCookie(request, DEVICE_COOKIE);
   if (existing) return { deviceId: existing, isNew: false };
 
-  const deviceId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+  const deviceId =
+    crypto && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
   return { deviceId, isNew: true };
 }
 
@@ -75,11 +76,10 @@ export function getStoreUrls(env) {
 }
 
 export async function logOpenEvent(context, payload) {
-  const { env, request } = context;
+  const { env } = context;
 
   const supabaseUrl = env?.SUPABASE_URL;
-  const supabaseKey =
-    env?.SUPABASE_SERVICE_ROLE_KEY || env?.SUPABASE_ANON_KEY;
+  const supabaseKey = env?.SUPABASE_SERVICE_ROLE_KEY || env?.SUPABASE_ANON_KEY;
 
   // If not configured, do nothing (won't break functions).
   if (!supabaseUrl || !supabaseKey) return;
@@ -102,4 +102,38 @@ export async function logOpenEvent(context, payload) {
   // Don't block the response if possible
   if (typeof context.waitUntil === "function") context.waitUntil(p);
   else await p;
+}
+
+// Tracking params (QR / campaigns)
+// Supports multiple aliases so older printed QRs keep working.
+export function parseTrackingParams(url) {
+  const sp = url?.searchParams;
+  if (!sp) return { ref: null, src: null, utm: {} };
+
+  const ref = sp.get("ref") || sp.get("qr") || sp.get("code") || sp.get("r") || null;
+
+  const src = sp.get("src") || sp.get("source") || sp.get("utm_source") || null;
+
+  const utm = {
+    utm_source: sp.get("utm_source"),
+    utm_medium: sp.get("utm_medium"),
+    utm_campaign: sp.get("utm_campaign"),
+    utm_content: sp.get("utm_content"),
+    utm_term: sp.get("utm_term"),
+  };
+
+  // Normalize empty strings to null
+  const clean = (v) => (v && String(v).trim().length ? String(v).trim() : null);
+
+  return {
+    ref: clean(ref),
+    src: clean(src),
+    utm: {
+      utm_source: clean(utm.utm_source),
+      utm_medium: clean(utm.utm_medium),
+      utm_campaign: clean(utm.utm_campaign),
+      utm_content: clean(utm.utm_content),
+      utm_term: clean(utm.utm_term),
+    },
+  };
 }
